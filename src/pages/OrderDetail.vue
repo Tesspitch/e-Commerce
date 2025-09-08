@@ -47,7 +47,7 @@
         <!-- รายการสินค้า -->
         <div class="col-12 col-lg-7">
           <div class="card">
-            <div class="card-header bg-light fw-semibold">สินค้า</div>
+            <div class="card-header bg-body-tertiary fw-semibold">สินค้า</div>
             <div class="list-group list-group-flush">
               <div class="list-group-item" v-for="it in order.items || []" :key="it.id + '-' + (variantText(it) || '')">
                 <div class="d-flex align-items-center gap-3">
@@ -77,7 +77,7 @@
         <!-- ผู้สั่งซื้อ + ชำระเงิน -->
         <div class="col-12 col-lg-5">
           <div class="card mb-3">
-            <div class="card-header bg-light fw-semibold">ข้อมูลผู้สั่งซื้อ</div>
+            <div class="card-header bg-body-tertiary fw-semibold">ข้อมูลผู้สั่งซื้อ</div>
             <div class="card-body">
               <div class="mb-2">
                 <div class="text-muted small">ชื่อ-นามสกุล</div>
@@ -95,7 +95,7 @@
           </div>
 
           <div class="card">
-            <div class="card-header bg-light fw-semibold">การชำระเงิน & สรุปยอด</div>
+            <div class="card-header bg-body-tertiary fw-semibold">การชำระเงิน & สรุปยอด</div>
             <div class="card-body">
               <div class="mb-2">
                 <div class="text-muted small">ช่องทางชำระเงิน</div>
