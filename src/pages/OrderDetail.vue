@@ -5,6 +5,7 @@
 
       <div class="d-flex gap-2">
         <router-link class="btn btn-outline-secondary" to="/tracking">ย้อนกลับ</router-link>
+
         <!-- ปุ่มลบคำสั่งซื้อ -->
         <button
           v-if="order"
@@ -47,16 +48,28 @@
         <!-- รายการสินค้า -->
         <div class="col-12 col-lg-7">
           <div class="card">
-            <div class="card-header bg-light fw-semibold">สินค้า</div>
+            <div class="card-header bg-body-tertiary fw-semibold">สินค้า</div>
             <div class="list-group list-group-flush">
-              <div class="list-group-item" v-for="it in order.items || []" :key="it.id + '-' + (variantText(it) || '')">
+              <div
+                class="list-group-item"
+                v-for="(it, idx) in (order.items || [])"
+                :key="String(it.id) + '-' + (variantText(it) || '') + '-' + idx"
+              >
                 <div class="d-flex align-items-center gap-3">
-                  <img :src="it.image || placeholder" :alt="it.name" style="width:72px;height:72px;object-fit:cover" class="rounded">
+                  <img
+                    :src="it.image || placeholder"
+                    :alt="it.imageAlt || it.name"
+                    style="width:72px;height:72px;object-fit:cover"
+                    class="rounded"
+                  >
                   <div class="flex-fill">
                     <div class="fw-semibold">
                       {{ it.name }}
                       <!-- รุ่น/สเปก (inventory) -->
-                      <span v-if="variantText(it)" class="badge bg-secondary-subtle text-dark ms-1">
+                      <span
+                        v-if="variantText(it)"
+                        class="badge bg-secondary-subtle text-secondary-emphasis fw-semibold ms-1"
+                      >
                         {{ variantText(it) }}
                       </span>
                     </div>
@@ -77,7 +90,7 @@
         <!-- ผู้สั่งซื้อ + ชำระเงิน -->
         <div class="col-12 col-lg-5">
           <div class="card mb-3">
-            <div class="card-header bg-light fw-semibold">ข้อมูลผู้สั่งซื้อ</div>
+            <div class="card-header bg-body-tertiary fw-semibold">ข้อมูลผู้สั่งซื้อ</div>
             <div class="card-body">
               <div class="mb-2">
                 <div class="text-muted small">ชื่อ-นามสกุล</div>
@@ -95,7 +108,7 @@
           </div>
 
           <div class="card">
-            <div class="card-header bg-light fw-semibold">การชำระเงิน & สรุปยอด</div>
+            <div class="card-header bg-body-tertiary fw-semibold">การชำระเงิน & สรุปยอด</div>
             <div class="card-body">
               <div class="mb-2">
                 <div class="text-muted small">ช่องทางชำระเงิน</div>
@@ -150,11 +163,13 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Modal } from 'bootstrap'
-import { useOrdersStore } from '../stores/orders.js'
+import { useOrdersStore } from '@/stores/orders'
+import { useProductsStore } from '@/stores/products'
 
 const route = useRoute()
 const router = useRouter()
 const orders = useOrdersStore()
+const products = useProductsStore()
 
 const order = ref(null)
 const loading = ref(true)
@@ -164,8 +179,25 @@ const placeholder = 'https://placehold.co/600x400?text=Product'
 onMounted(async () => {
   loading.value = true
   try {
+    // ให้แน่ใจว่ามี product list สำหรับไฮเดรต item.image
+    if (!products.list.length) await products.fetch()
+
     const id = route.params.id
-    order.value = await orders.getById(id)
+    const data = await orders.getById(id)
+
+    // เติม image/brand/category/alt ให้ item ที่ขาดข้อมูล (ออเดอร์เก่า)
+    const hydratedItems = (data?.items || []).map(it => {
+      const p = products.list.find(x => String(x.id) === String(it.id))
+      return {
+        ...it,
+        image: it.image || p?.image || null,
+        imageAlt: it.imageAlt || p?.imageAlt || it.name,
+        brand: it.brand || p?.brand,
+        category: it.category || p?.category,
+      }
+    })
+
+    order.value = { ...data, items: hydratedItems }
   } catch (e) {
     console.error('[order.detail]', e)
     order.value = null
@@ -187,11 +219,11 @@ const doDelete = async () => {
   if (!order.value?.id) return
   removing.value = true
   try {
-    // รองรับหลายชื่อเมธอดใน store (ปรับตามโปรเจ็กต์ของคุณ)
     const id = order.value.id
-    if (typeof orders.delete === 'function') await orders.delete(id)
+    // รองรับชื่อเมธอดต่างกัน (delete/remove/destroy) ใน store
+    if (typeof orders.delete === 'function')      await orders.delete(id)
     else if (typeof orders.remove === 'function') await orders.remove(id)
-    else if (typeof orders.destroy === 'function') await orders.destroy(id)
+    else if (typeof orders.destroy === 'function')await orders.destroy(id)
     else throw new Error('orders store ไม่มีเมธอดลบ (delete/remove/destroy)')
 
     closeDeleteConfirm()
@@ -228,14 +260,14 @@ const dt = (v) => {
 const badgeOf = (status) => {
   const s = (status || '').toLowerCase()
   if (['processing', 'pending'].includes(s)) return 'text-bg-warning'
-  if (['shipped', 'shipping'].includes(s)) return 'text-bg-info'
+  if (['shipped', 'shipping'].includes(s))  return 'text-bg-info'
   if (['delivered', 'success'].includes(s)) return 'text-bg-success'
   if (['cancelled', 'canceled', 'failed'].includes(s)) return 'text-bg-danger'
   return 'text-bg-secondary'
 }
 const payLabel = (v) => {
   const s = (v || '').toLowerCase()
-  if (s === 'cod') return 'เก็บเงินปลายทาง (COD)'
+  if (s === 'cod')  return 'เก็บเงินปลายทาง (COD)'
   if (s === 'bank') return 'โอนผ่านธนาคาร'
   if (s === 'card') return 'บัตรเครดิต/เดบิต'
   return '—'

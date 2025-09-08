@@ -12,7 +12,7 @@
     <div class="card">
       <div class="table-responsive">
         <table class="table align-middle mb-0">
-          <thead class="table-light">
+          <thead class="table-tertiary">
             <tr>
               <th style="width:180px">วันที่</th>
               <th>ชื่อสินค้า</th>
