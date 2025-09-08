@@ -194,7 +194,7 @@ onUnmounted(() => {
   border-radius: 10px;
   padding: 0 12px;
   outline: none;
-  color: var(--nav-fg);
+  color: #000 !important;
   background: rgba(255, 255, 255, .75);
 }
 

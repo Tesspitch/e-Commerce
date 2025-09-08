@@ -30,16 +30,16 @@
                   <h6 class="mb-2">ข้อมูลผู้สั่งซื้อ</h6>
                   <div class="row g-2">
                     <div class="col-md-6">
-                      <label class="form-label">ชื่อ</label>
+                      <label class="form-label">ชื่อ</label required>
                       <input v-model.trim="form.firstName" class="form-control" required/>
                     </div>
                     <div class="col-md-6">
-                      <label class="form-label">นามสกุล</label>
+                      <label class="form-label">นามสกุล</label required>
                       <input v-model.trim="form.lastName" class="form-control" required/>
                     </div>
                     <div class="col-md-6">
                       <label class="form-label">เบอร์โทร</label>
-                      <input v-model.trim="form.phone" class="form-control" type="tel" required/>
+                      <input :type="phone" v-model.trim="form.phone" class="form-control" type="tel" required/>
                     </div>
                     <div class="col-12">
                       <label class="form-label">ที่อยู่</label>

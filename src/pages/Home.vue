@@ -12,13 +12,30 @@
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
           <h3 class="m-0">สินค้า</h3>
 
-          <!-- ปุ่มหมวดหมู่ (สำหรับจอเล็ก) — ย้ายมาไว้ด้านบนสินค้า -->
-          <button class="btn btn-outline-primary d-lg-none" type="button" data-bs-toggle="offcanvas"
-                  data-bs-target="#catDrawer" aria-controls="catDrawer">
+          <!-- ปุ่มหมวดหมู่ (มือถือ) -->
+          <button
+            class="btn btn-ghost d-lg-none"
+            type="button"
+            data-bs-toggle="offcanvas"
+            data-bs-target="#catDrawer"
+            aria-controls="catDrawer"
+          >
             หมวดหมู่
           </button>
 
-          <div class="d-flex gap-2 mt-2">
+          <div class="d-flex gap-2 mt-2 align-items-center">
+            <!-- สลับโหมดแสง -->
+            <button
+              class="btn btn-ghost btn-icon"
+              type="button"
+              :aria-label="theme==='dark' ? 'สลับเป็นโหมดสว่าง' : 'สลับเป็นโหมดมืด'"
+              @click="toggleTheme"
+              title="Toggle theme"
+            >
+              <span v-if="theme==='dark'">☀️</span>
+              <span v-else>🌙</span>
+            </button>
+
             <select class="form-select" v-model="sort">
               <option value="">จัดเรียง</option>
               <option value="price-asc">ราคาต่ำ → สูง</option>
@@ -28,8 +45,8 @@
         </div>
 
         <!-- Products -->
-        <div class="row row-cols-2 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3">
-          <div class="col" v-for="p in productsView" :key="p.id">
+        <div class="row row-cols-2 row-cols-sm-1 row-cols-md-3 row-cols-xl-5 g-3">
+          <div class="col" v-for="p in productsPage" :key="p.id">
             <div
               class="card h-100"
               role="button"
@@ -44,13 +61,13 @@
                 <h6 class="card-title">{{ p.name }}</h6>
                 <p class="text-muted mb-2">
                   {{ p.brand || '-' }} ·
-                  <span class="badge bg-light text-dark">{{ p.category || '-' }}</span>
+                  <span class="badge bg-body-secondary text-body">{{ p.category || '-' }}</span>
                 </p>
                 <div class="mt-auto d-flex justify-content-between align-items-center">
                   <strong>{{ displayPrice(p) }}</strong>
                   <button
-                    class="btn btn-bw btn-sm"
-                    @click.stop="hasInventory(p) ? openQuick(p) : addToCart(p)"
+                    class="btn btn-cta btn-sm"
+                    @click.stop="hasInventory(p) ? openQuick(p) : addToCartDirect(p)"
                   >
                     เพิ่ม
                   </button>
@@ -58,6 +75,28 @@
               </div>
             </div>
           </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="d-flex flex-column flex-sm-row align-items-center justify-content-between gap-2 mt-4">
+          <small class="text-muted">
+            แสดง {{ pageStart + 1 }}–{{ Math.min(pageEnd, totalItems) }} จาก {{ totalItems }} รายการ
+          </small>
+          <nav aria-label="pagination" class="w-100 w-sm-auto">
+            <ul class="pagination justify-content-center mb-0 pagination-sm elegant-pagination">
+              <li class="page-item" :class="{ disabled: currentPage <= 1 }">
+                <button class="page-link" @click="prevPage" :disabled="currentPage <= 1">ก่อนหน้า</button>
+              </li>
+              <li class="page-item disabled">
+                <span class="page-link">
+                  หน้า {{ currentPage }} / {{ totalPages || 1 }}
+                </span>
+              </li>
+              <li class="page-item" :class="{ disabled: currentPage >= totalPages }">
+                <button class="page-link" @click="nextPage" :disabled="currentPage >= totalPages">ถัดไป</button>
+              </li>
+            </ul>
+          </nav>
         </div>
       </div> <!-- /main -->
     </div> <!-- /row -->
@@ -103,9 +142,10 @@
                   </div>
 
                   <div class="d-flex gap-2 mt-3">
-                    <button class="btn btn-bw" :disabled="!canAdd" @click="addToCart(quick, quickQty)">
+                    <button class="btn btn-cta" :disabled="!canAdd" @click="addToCartFromQuick(quick, quickQty)">
                       เพิ่มเข้าตะกร้า
                     </button>
+                    <button class="btn btn-ghost" data-bs-dismiss="modal">ยกเลิก</button>
                   </div>
                 </div>
               </div>
@@ -121,7 +161,9 @@
                       <div class="fw-semibold">{{ r.name }}</div>
                       <div class="mt-auto d-flex justify-content-between align-items-center">
                         <span>฿{{ displayPriceNumber(r).toLocaleString() }}</span>
-                        <button class="btn btn-sm btn-outline-primary" @click.stop="hasInventory(r) ? openQuick(r) : addToCart(r)">เพิ่ม</button>
+                        <button class="btn btn-ghost btn-sm" @click.stop="hasInventory(r) ? openQuick(r) : addToCartDirect(r)">
+                          เพิ่ม
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -130,7 +172,7 @@
             </template>
           </div>
           <div class="modal-footer">
-            <button class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button>
+            <button class="btn btn-ghost" data-bs-dismiss="modal">ปิด</button>
           </div>
         </div>
       </div>
@@ -149,16 +191,14 @@
 
             <div v-else>
               <div v-for="it in items" :key="it.id" class="d-flex align-items-center gap-3 py-2 border-bottom">
-                <img :src="it.image || placeholder" alt="" style="width:72px;height:72px;object-fit:cover"
-                  class="rounded" />
+                <img :src="it.image || placeholder" alt="" style="width:72px;height:72px;object-fit:cover" class="rounded" />
                 <div class="flex-fill">
                   <div class="fw-semibold">{{ it.name }}</div>
                   <small class="text-muted">฿{{ toMoney(it.price) }}</small>
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                  <input type="number" min="1" class="form-control" style="width:90px" v-model.number="it.qty"
-                    @change="changeQty(it)" />
-                  <button class="btn btn-outline-danger" @click="remove(it.id)">ลบ</button>
+                  <input type="number" min="1" class="form-control" style="width:90px" v-model.number="it.qty" @change="changeQty(it)" />
+                  <button class="btn btn-ghost" @click="remove(it.id)">ลบ</button>
                 </div>
               </div>
 
@@ -204,20 +244,10 @@
                     </div>
 
                     <hr />
-                    <div class="d-flex justify-content-between">
-                      <div>Subtotal</div>
-                      <div>฿{{ toMoney(subtotal) }}</div>
-                    </div>
-                    <div class="d-flex justify-content-between">
-                      <div>Shipping</div>
-                      <div>฿{{ toMoney(shipping) }}</div>
-                    </div>
-                    <div class="d-flex justify-content-between fw-bold fs-5 mt-2">
-                      <div>Total</div>
-                      <div>฿{{ toMoney(total) }}</div>
-                    </div>
-                    <button :disabled="!canSubmit" class="btn btn-bw w-100 mt-3"
-                      @click="placeOrder">ยืนยันสั่งซื้อ</button>
+                    <div class="d-flex justify-content-between"><div>Subtotal</div><div>฿{{ toMoney(subtotal) }}</div></div>
+                    <div class="d-flex justify-content-between"><div>Shipping</div><div>฿{{ toMoney(shipping) }}</div></div>
+                    <div class="d-flex justify-content-between fw-bold fs-5 mt-2"><div>Total</div><div>฿{{ toMoney(total) }}</div></div>
+                    <button :disabled="!canSubmit" class="btn btn-cta w-100 mt-3" @click="placeOrder">ยืนยันสั่งซื้อ</button>
                   </div>
                 </div>
               </div>
@@ -227,16 +257,14 @@
       </div>
     </div> <!-- ปิด Cart Modal -->
 
-    <!-- Toast (อยู่นอกทุก modal) -->
+    <!-- Toast -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:2000; pointer-events:none">
-      <div class="toast text-bg-success border-0 shadow" ref="cartToastEl" role="alert" aria-live="assertive"
-        aria-atomic="true" style="pointer-events:auto">
+      <div class="toast text-bg-success border-0 shadow" ref="cartToastEl" role="alert" aria-live="assertive" aria-atomic="true" style="pointer-events:auto">
         <div class="d-flex align-items-center">
           <div class="toast-body">
             <strong class="me-1">✓</strong> {{ cartToastMsg }}
           </div>
-          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
-            aria-label="Close"></button>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
       </div>
     </div>
@@ -255,7 +283,6 @@ import { useProductsStore } from '@/stores/products'
 import { useCartStore } from '@/stores/cart'
 import { useOrdersStore } from '@/stores/orders'
 
-/* ยูทิล inventory */
 import {
   hasInventory,
   minPrice,
@@ -271,11 +298,32 @@ const ordersStore = useOrdersStore()
 const route = useRoute()
 const router = useRouter()
 
+/* THEME */
+const theme = ref(localStorage.getItem('theme') || (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'))
+const applyTheme = (t) => document.documentElement.setAttribute('data-bs-theme', t)
+onMounted(() => applyTheme(theme.value))
+const toggleTheme = () => {
+  theme.value = theme.value === 'dark' ? 'light' : 'dark'
+  applyTheme(theme.value)
+  localStorage.setItem('theme', theme.value)
+}
+
+/* FILTERS & SORT */
 const qFromUrl = useKeywordFromRoute()
 const sort = ref('')
+const selectedCategory = computed(() => route.query.category ?? '')
 
+/* PAGINATION */
+const pageSize = 30
+const currentPage = ref(Math.max(1, parseInt(route.query.page || '1', 10) || 1))
+watch(() => route.query.page, (v) => {
+  const n = Math.max(1, parseInt(v || '1', 10) || 1)
+  if (n !== currentPage.value) currentPage.value = n
+})
+
+/* DATA */
 const quick = ref(null)
-const variantKey = ref('')   // รุ่นที่เลือกใน Quick View
+const variantKey = ref('')
 const quickQty = ref(1)
 const placeholder = 'https://placehold.co/600x400?text=Product'
 
@@ -285,35 +333,53 @@ const shipping = computed(() => (subtotal.value > 0 ? 50 : 0))
 const total = computed(() => subtotal.value + shipping.value)
 
 const form = ref({ firstName: '', lastName: '', phone: '', address: '', paymentMethod: 'cod' })
-const canSubmit = computed(() =>
-  items.value.length > 0 && form.value.firstName && form.value.lastName && form.value.phone && form.value.address
-)
+const canSubmit = computed(() => items.value.length > 0 && form.value.firstName && form.value.lastName && form.value.phone && form.value.address)
 
 onMounted(() => { productsStore.fetch() })
 
-/* ---------- FILTERS ---------- */
-const selectedCategory = computed(() => route.query.category ?? '')
-
-const productsView = computed(() => {
+/* ---------- FILTERED LIST ---------- */
+const productsFiltered = computed(() => {
   let list = (productsStore.list ?? []).slice()
-
   const keyword = (qFromUrl.value || '').trim().toLowerCase()
+
   if (keyword) {
-    list = list.filter(p =>
-      ([p.name, p.brand, p.category, p.description, p.seo].filter(Boolean).join(' ').toLowerCase()).includes(keyword)
-    )
+    list = list.filter(p => {
+      const seo = Array.isArray(p.seo) ? p.seo.join(' ') : (p.seo || '')
+      return ([p.name, p.brand, p.category, p.description, seo]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+        .includes(keyword))
+    })
   }
   if (selectedCategory.value) list = list.filter(p => p.category === selectedCategory.value)
-  if (sort.value === 'price-asc') list.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0))
+  if (sort.value === 'price-asc')  list.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0))
   if (sort.value === 'price-desc') list.sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0))
   return list
 })
 
-/* ---------- PRICE DISPLAY (การ์ดสินค้า) ---------- */
+watch([qFromUrl, selectedCategory, sort], () => goPage(1))
+
+/* ---------- PAGINATION COMPUTEDS ---------- */
+const totalItems  = computed(() => productsFiltered.value.length)
+const totalPages  = computed(() => Math.max(1, Math.ceil(totalItems.value / pageSize)))
+const pageStart   = computed(() => (currentPage.value - 1) * pageSize)
+const pageEnd     = computed(() => pageStart.value + pageSize)
+const productsPage = computed(() => productsFiltered.value.slice(pageStart.value, pageEnd.value))
+
+function goPage(n) {
+  const page = Math.min(Math.max(1, n), totalPages.value)
+  if (page === currentPage.value && String(route.query.page || '1') === String(page)) return
+  currentPage.value = page
+  const next = { ...route.query, page: page > 1 ? String(page) : undefined }
+  router.replace({ name: route.name || 'home', query: next })
+}
+const nextPage = () => goPage(currentPage.value + 1)
+const prevPage = () => goPage(currentPage.value - 1)
+
+/* ---------- PRICE DISPLAY ---------- */
 const displayPriceNumber = (p) => hasInventory(p) ? minPrice(p) : Number(p.price || 0)
-const displayPrice = (p) => hasInventory(p)
-  ? `฿${displayPriceNumber(p).toLocaleString()}`
-  : `฿${displayPriceNumber(p).toLocaleString()}`
+const displayPrice = (p) => `฿${displayPriceNumber(p).toLocaleString()}`
 
 /* ---------- QUICK VIEW ---------- */
 let quickModal
@@ -322,7 +388,6 @@ const openQuick = async (p) => {
   quick.value = typeof p === 'object' ? p : list.find(x => String(x.id) === String(p))
   if (!quick.value) return
 
-  // ตั้งค่าตัวเลือกเริ่มต้น (ตัวที่สต็อกมากกว่า 0) ถ้ามี inventory
   variantKey.value = hasInventory(quick.value) ? (firstAvailableVariantKey(quick.value) || '') : ''
   quickQty.value = 1
 
@@ -355,8 +420,11 @@ const openCart = () => {
   checkoutModal.show()
 }
 
-// เพิ่มจากการ์ด: ถ้าสินค้ามี inventory ให้เปิด Quick เพื่อเลือกตัวเลือกก่อน
-const addToCart = (p, qty = 1) => {
+const addToCartDirect = (p) => {
+  cartStore.add({ ...p, price: Number(p.price || 0) }, 1)
+  showAddedToast(p, 1)
+}
+const addToCartFromQuick = (p, qty = 1) => {
   const key = p?.inventory ? variantKey.value : null
   const payload = {
     ...p,
@@ -372,9 +440,7 @@ const remove    = (id) => cartStore.remove(id)
 
 /* ---------- ORDER ---------- */
 function cleanupModals() {
-  document.querySelectorAll('.modal.show').forEach(el => {
-    try { (Modal.getInstance(el) || new Modal(el)).hide() } catch {}
-  })
+  document.querySelectorAll('.modal.show').forEach(el => { try { (Modal.getInstance(el) || new Modal(el)).hide() } catch {} })
   document.querySelectorAll('.modal-backdrop').forEach(el => el.remove())
   document.body.classList.remove('modal-open')
   document.body.style.removeProperty('paddingRight')
@@ -419,7 +485,7 @@ const placeOrder = async () => {
   }
 }
 
-/* ---------- TOAST (Add to cart) ---------- */
+/* ---------- TOAST ---------- */
 const cartToastEl = ref(null)
 let cartToast = null
 const cartToastMsg = ref('')
@@ -439,6 +505,93 @@ const toMoney = (v) => Number(v || 0).toLocaleString()
 </script>
 
 <style scoped>
-.btn-bw{ background:#0ea5e9; color:#fff; }
-.btn-bw:hover{ background:#0369a1; color:#fff; }
+/* ===== Elegant Buttons ===== */
+
+
+.btn-cta{
+  --cta-bg: var(--bs-primary);
+  --cta-bg-2: color-mix(in oklab, var(--bs-primary) 88%, black);
+  background-image: linear-gradient(180deg, var(--cta-bg), var(--cta-bg-2));
+  color: #fff;
+  border: 0;
+  border-radius: 999px;
+  padding: .55rem 1rem;
+  box-shadow: 0 6px 18px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.06);
+  transition: transform .12s ease, box-shadow .2s ease, filter .2s ease;
+}
+.btn-cta:hover{
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+  box-shadow: 0 10px 22px rgba(0,0,0,.10), 0 3px 10px rgba(0,0,0,.06);
+  color:#fff;
+}
+.btn-cta:active{
+  transform: translateY(0);
+  filter: brightness(.98);
+  box-shadow: 0 3px 10px rgba(0,0,0,.12);
+}
+.btn-cta:disabled{
+  filter: grayscale(.2) opacity(.8);
+}
+.btn-cta.btn-sm{
+  padding: .4rem .8rem;
+}
+
+/* Secondary / Ghost (โปร่งหรู, กลมกลืนกับ Light/Dark) */
+.btn-ghost{
+  background: color-mix(in oklab, var(--bs-body-bg) 80%, transparent);
+  border: 1px solid var(--bs-border-color);
+  color: var(--bs-body-color);
+  border-radius: 999px;
+  padding: .5rem .9rem;
+  transition: background .2s ease, color .2s ease, transform .12s ease, box-shadow .2s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,.04);
+}
+.btn-ghost:hover{
+  background: color-mix(in oklab, var(--bs-body-bg) 92%, var(--bs-primary) 8%);
+  transform: translateY(-1px);
+}
+.btn-ghost:active{
+  transform: translateY(0);
+}
+.btn-ghost.btn-sm{
+  padding: .35rem .7rem;
+}
+
+/* ปุ่มไอคอนทรงกลม */
+.btn-icon{
+  width: 38px; height: 38px; padding: 0;
+  display: inline-grid; place-items: center;
+}
+
+/* ปรับ badge ให้กลมกลืนทั้ง light/dark */
+.badge.bg-body-secondary{
+  background-color: var(--bs-secondary-bg) !important;
+  color: var(--bs-secondary-color) !important;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+
+.elegant-pagination .page-link{
+  border: 0;
+  border-radius: 999px !important;
+  background: var(--bs-tertiary-bg);
+  color: var(--bs-body-color);
+  padding: .45rem .9rem;
+  margin: 0 .25rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,.05);
+  transition: background .2s ease, transform .12s ease;
+}
+.elegant-pagination .page-link:hover{
+  background: color-mix(in oklab, var(--bs-tertiary-bg) 80%, var(--bs-primary) 10%);
+  transform: translateY(-1px);
+}
+.elegant-pagination .page-item.disabled .page-link{
+  opacity: .55;
+  transform: none;
+}
+
+.badge, .card-title { font-weight: 600; }
 </style>
