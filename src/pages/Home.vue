@@ -1,3 +1,4 @@
+<!-- src/views/Home.vue -->
 <template>
   <div class="container-fluid px-5">
     <div class="row">
@@ -11,9 +12,9 @@
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
           <h3 class="m-0">สินค้า</h3>
 
-          <!-- ปุ่มหมวดหมู่ (สำหรับจอเล็ก) — ย้ายมาไว้ด้านบนสินค้า -->
+          <!-- ปุ่มหมวดหมู่ (มือถือ) -->
           <button class="btn btn-outline-primary d-lg-none" type="button" data-bs-toggle="offcanvas"
-            data-bs-target="#catDrawer" aria-controls="catDrawer">
+                  data-bs-target="#catDrawer" aria-controls="catDrawer">
             หมวดหมู่
           </button>
 
@@ -29,8 +30,15 @@
         <!-- Products -->
         <div class="row row-cols-2 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3">
           <div class="col" v-for="p in productsView" :key="p.id">
-            <div class="card h-100" role="button" tabindex="0" style="cursor:pointer" @click="openQuick(p)"
-              @keydown.enter.prevent="openQuick(p)" @keydown.space.prevent="openQuick(p)">
+            <div
+              class="card h-100"
+              role="button"
+              tabindex="0"
+              style="cursor:pointer"
+              @click="openQuick(p)"
+              @keydown.enter.prevent="openQuick(p)"
+              @keydown.space.prevent="openQuick(p)"
+            >
               <img :src="p.image || placeholder" class="card-img-top" :alt="p.name" loading="lazy" />
               <div class="card-body d-flex flex-column">
                 <h6 class="card-title">{{ p.name }}</h6>
@@ -39,8 +47,8 @@
                   <span class="badge bg-light text-dark">{{ p.category || '-' }}</span>
                 </p>
                 <div class="mt-auto d-flex justify-content-between align-items-center">
-                  <strong>฿{{ toMoney(p.price) }}</strong>
-                  <button class="btn btn-bw btn-sm" @click.stop="addToCart(p)">เพิ่ม</button>
+                  <strong>{{ displayPrice(p) }}</strong>
+                  <button class="btn btn-bw btn-sm" @click.stop="quickAdd(p)">เพิ่ม</button>
                 </div>
               </div>
             </div>
@@ -65,19 +73,35 @@
                   <img :src="quick.image || placeholder" class="img-fluid rounded" :alt="quick.name" />
                 </div>
                 <div class="col-12 col-lg-6">
+                  <!-- ตัวเลือกรุ่น -->
+                  <VariantPicker
+                    v-if="quick?.inventory"
+                    :product="quick"
+                    v-model="variantKey"
+                    label=""
+                    class="mb-2"
+                  />
                   <div class="mb-1 text-muted">
                     {{ quick.brand || '-' }} · {{ quick.category || '-' }}
                   </div>
-                  <h4 class="mb-2">฿{{ toMoney(quick.price) }}</h4>
+                  <h4 class="mb-2">฿{{ effPrice.toLocaleString() }}</h4>
                   <p class="mb-3">{{ quick.description || '—' }}</p>
 
-                  <div class="input-group" style="max-width:200px">
+                  <div class="input-group" style="max-width:220px">
                     <span class="input-group-text">จำนวน</span>
-                    <input type="number" class="form-control" v-model.number="quickQty" min="1" />
+                    <input
+                      type="number"
+                      class="form-control"
+                      v-model.number="quickQty"
+                      :min="1"
+                      :max="effStock || undefined"
+                    />
                   </div>
 
                   <div class="d-flex gap-2 mt-3">
-                    <button class="btn btn-bw" @click="addToCart(quick, quickQty)">เพิ่มเข้าตะกร้า</button>
+                    <button class="btn btn-bw" :disabled="!canAdd" @click="addToCart(quick, quickQty)">
+                      เพิ่มเข้าตะกร้า
+                    </button>
                   </div>
                 </div>
               </div>
@@ -92,8 +116,8 @@
                       <small class="text-muted mb-1">{{ r.brand || '-' }}</small>
                       <div class="fw-semibold">{{ r.name }}</div>
                       <div class="mt-auto d-flex justify-content-between align-items-center">
-                        <span>฿{{ toMoney(r.price) }}</span>
-                        <button class="btn btn-sm btn-outline-primary" @click.stop="addToCart(r)">เพิ่ม</button>
+                        <span>฿{{ displayPriceNumber(r).toLocaleString() }}</span>
+                        <button class="btn btn-sm btn-outline-primary" @click.stop="quickAdd(r)">เพิ่ม</button>
                       </div>
                     </div>
                   </div>
@@ -120,17 +144,19 @@
             <div v-if="!items.length" class="text-center text-muted py-5">ยังไม่มีสินค้าในตะกร้า</div>
 
             <div v-else>
-              <div v-for="it in items" :key="it.id" class="d-flex align-items-center gap-3 py-2 border-bottom">
-                <img :src="it.image || placeholder" alt="" style="width:72px;height:72px;object-fit:cover"
-                  class="rounded" />
+              <div v-for="it in items" :key="it.uid" class="d-flex align-items-center gap-3 py-2 border-bottom">
+                <img :src="it.image || placeholder" alt="" style="width:72px;height:72px;object-fit:cover" class="rounded" />
                 <div class="flex-fill">
-                  <div class="fw-semibold">{{ it.name }}</div>
+                  <div class="fw-semibold">
+                    {{ it.name }}
+                    <small v-if="it.variant?.label" class="text-muted">— {{ it.variant.label }}</small>
+                  </div>
                   <small class="text-muted">฿{{ toMoney(it.price) }}</small>
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                  <input type="number" min="1" class="form-control" style="width:90px" v-model.number="it.qty"
-                    @change="changeQty(it)" />
-                  <button class="btn btn-outline-danger" @click="remove(it.id)">ลบ</button>
+                  <input type="number" min="1" class="form-control" style="width:90px"
+                         v-model.number="it.qty" @change="changeQty(it.uid, it.qty)" />
+                  <button class="btn btn-outline-danger" @click="remove(it.uid)">ลบ</button>
                 </div>
               </div>
 
@@ -176,20 +202,10 @@
                     </div>
 
                     <hr />
-                    <div class="d-flex justify-content-between">
-                      <div>Subtotal</div>
-                      <div>฿{{ toMoney(subtotal) }}</div>
-                    </div>
-                    <div class="d-flex justify-content-between">
-                      <div>Shipping</div>
-                      <div>฿{{ toMoney(shipping) }}</div>
-                    </div>
-                    <div class="d-flex justify-content-between fw-bold fs-5 mt-2">
-                      <div>Total</div>
-                      <div>฿{{ toMoney(total) }}</div>
-                    </div>
-                    <button :disabled="!canSubmit" class="btn btn-bw w-100 mt-3"
-                      @click="placeOrder">ยืนยันสั่งซื้อ</button>
+                    <div class="d-flex justify-content-between"><div>Subtotal</div><div>฿{{ toMoney(subtotal) }}</div></div>
+                    <div class="d-flex justify-content-between"><div>Shipping</div><div>฿{{ toMoney(shipping) }}</div></div>
+                    <div class="d-flex justify-content-between fw-bold fs-5 mt-2"><div>Total</div><div>฿{{ toMoney(total) }}</div></div>
+                    <button :disabled="!canSubmit" class="btn btn-bw w-100 mt-3" @click="placeOrder">ยืนยันสั่งซื้อ</button>
                   </div>
                 </div>
               </div>
@@ -197,18 +213,17 @@
           </div><!-- /modal-body -->
         </div>
       </div>
-    </div> <!-- ปิด Cart Modal -->
+    </div> <!-- /Cart Modal -->
 
-    <!-- Toast (อยู่นอกทุก modal) -->
+    <!-- Toast -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:2000; pointer-events:none">
       <div class="toast text-bg-success border-0 shadow" ref="cartToastEl" role="alert" aria-live="assertive"
-        aria-atomic="true" style="pointer-events:auto">
+           aria-atomic="true" style="pointer-events:auto">
         <div class="d-flex align-items-center">
           <div class="toast-body">
             <strong class="me-1">✓</strong> {{ cartToastMsg }}
           </div>
-          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
-            aria-label="Close"></button>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
       </div>
     </div>
@@ -220,11 +235,14 @@ import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Modal, Toast } from 'bootstrap'
 import Sidebar from '@/components/Sidebar.vue'
+import VariantPicker from '@/components/VariantPicker.vue'
 import { useKeywordFromRoute } from '@/composables/useSearch.js'
 
 import { useProductsStore } from '@/stores/products'
 import { useCartStore } from '@/stores/cart'
 import { useOrdersStore } from '@/stores/orders'
+
+import { hasInventory, minPrice, firstAvailableVariantKey, priceFor, stockFor } from '@/utils/product'
 
 const productsStore = useProductsStore()
 const cartStore = useCartStore()
@@ -237,11 +255,11 @@ const qFromUrl = useKeywordFromRoute()
 const sort = ref('')
 
 const quick = ref(null)
+const variantKey = ref('')   // รุ่นที่เลือกใน Quick View
 const quickQty = ref(1)
 const placeholder = 'https://placehold.co/600x400?text=Product'
 
 const items = computed(() => cartStore.items)
-const cartCount = computed(() => cartStore.count)
 const subtotal = computed(() => cartStore.subtotal)
 const shipping = computed(() => (subtotal.value > 0 ? 50 : 0))
 const total = computed(() => subtotal.value + shipping.value)
@@ -258,7 +276,6 @@ const selectedCategory = computed(() => route.query.category ?? '')
 
 const productsView = computed(() => {
   let list = (productsStore.list ?? []).slice()
-
   const keyword = (qFromUrl.value || '').trim().toLowerCase()
   if (keyword) {
     list = list.filter(p =>
@@ -271,14 +288,21 @@ const productsView = computed(() => {
   return list
 })
 
+/* ---------- PRICE DISPLAY ---------- */
+const displayPriceNumber = (p) => hasInventory(p) ? minPrice(p) : Number(p.price || 0)
+const displayPrice = (p) => hasInventory(p)
+  ? `จาก ฿${displayPriceNumber(p).toLocaleString()}`
+  : `฿${displayPriceNumber(p).toLocaleString()}`
+
 /* ---------- QUICK VIEW ---------- */
 let quickModal
 const openQuick = async (p) => {
   const list = productsStore.list ?? []
   quick.value = typeof p === 'object' ? p : list.find(x => String(x.id) === String(p))
   if (!quick.value) return
-
+  variantKey.value = hasInventory(quick.value) ? (firstAvailableVariantKey(quick.value) || '') : ''
   quickQty.value = 1
+
   quickModal = quickModal || new Modal(document.getElementById('quickModal'))
   quickModal.show()
 
@@ -286,27 +310,52 @@ const openQuick = async (p) => {
   document.querySelector('#quickModal .modal-body')?.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-const related = computed(() => {
-  if (!quick.value) return []
-  return (productsStore.list ?? [])
-    .filter(x => x.category === quick.value.category && x.id !== quick.value.id)
-    .slice(0, 8)
-})
+const effPrice = computed(() => priceFor(quick.value, variantKey.value))
+const effStock = computed(() => stockFor(quick.value, variantKey.value))
+const canAdd = computed(() => (effStock.value || 0) > 0)
 
-/* ---------- CART / CHECKOUT ---------- */
+/* ---------- CART ---------- */
 let checkoutModal
 const openCart = () => {
   checkoutModal = checkoutModal || new Modal(document.getElementById('checkoutModal'))
   checkoutModal.show()
 }
-const addToCart = (p, qty = 1) => { cartStore.add(p, qty); showAddedToast(p, qty) }
-const changeQty = (it) => cartStore.changeQty(it.id, it.qty)
-const remove = (id) => cartStore.remove(id)
+
+// กดเพิ่มจากการ์ด: ถ้ามี inventory ให้เลือก default รุ่นแรกที่พร้อมขาย
+const quickAdd = (p) => {
+  if (hasInventory(p)) {
+    const key = firstAvailableVariantKey(p)
+    const payload = {
+      ...p,
+      price: priceFor(p, key),
+      variant: key ? { key, label: key } : undefined,
+    }
+    cartStore.add(payload, 1)
+    showAddedToast(payload, 1)
+  } else {
+    cartStore.add({ ...p, price: Number(p.price || 0) }, 1)
+    showAddedToast(p, 1)
+  }
+}
+
+const addToCart = (p, qty = 1) => {
+  const key = p?.inventory ? variantKey.value : null
+  const payload = {
+    ...p,
+    price: key ? priceFor(p, key) : Number(p.price || 0),
+    variant: key ? { key, label: key } : undefined,
+  }
+  cartStore.add(payload, qty)
+  showAddedToast(payload, qty)
+}
+
+const changeQty = (uid, qty) => cartStore.changeQty(uid, qty)
+const remove    = (uid) => cartStore.remove(uid)
 
 /* ---------- ORDER ---------- */
 function cleanupModals() {
   document.querySelectorAll('.modal.show').forEach(el => {
-    try { (Modal.getInstance(el) || new Modal(el)).hide() } catch { }
+    try { (Modal.getInstance(el) || new Modal(el)).hide() } catch {}
   })
   document.querySelectorAll('.modal-backdrop').forEach(el => el.remove())
   document.body.classList.remove('modal-open')
@@ -316,7 +365,15 @@ function cleanupModals() {
 const placeOrder = async () => {
   const payload = {
     customer: { ...form.value },
-    items: items.value.map(it => ({ id: it.id, name: it.name, qty: it.qty, price: it.price, brand: it.brand, category: it.category })),
+    items: items.value.map(it => ({
+      id: it.id,
+      name: it.name,
+      qty: it.qty,
+      price: it.price,
+      brand: it.brand,
+      category: it.category,
+      variant: it.variant?.key || null,
+    })),
     total: total.value,
     status: 'processing',
     createdAt: new Date().toISOString(),
@@ -342,7 +399,7 @@ const placeOrder = async () => {
   }
 }
 
-/* ---------- TOAST (Add to cart) ---------- */
+/* ---------- TOAST ---------- */
 const cartToastEl = ref(null)
 let cartToast = null
 const cartToastMsg = ref('')
@@ -352,7 +409,7 @@ onMounted(() => {
 })
 const showAddedToast = (item, qty = 1) => {
   const q = Number(qty) || 1
-  cartToastMsg.value = `เพิ่ม "${item?.name ?? 'สินค้า'}" × ${q} ลงตะกร้าแล้ว`
+  cartToastMsg.value = `เพิ่ม "${item?.name ?? 'สินค้า'}"${item?.variant?.label ? ` (${item.variant.label})` : ''} × ${q} ลงตะกร้าแล้ว`
   if (!cartToast && cartToastEl.value) cartToast = new Toast(cartToastEl.value, { delay: 2200, autohide: true })
   cartToast?.show()
 }
@@ -362,13 +419,6 @@ const toMoney = (v) => Number(v || 0).toLocaleString()
 </script>
 
 <style scoped>
-.btn-bw {
-  background: #0ea5e9;
-  color: #fff;
-}
-
-.btn-bw:hover {
-  background: #0369a1;
-  color: #fff;
-}
+.btn-bw{ background:#0ea5e9; color:#fff; }
+.btn-bw:hover{ background:#0369a1; color:#fff; }
 </style>
