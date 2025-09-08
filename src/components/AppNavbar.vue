@@ -296,15 +296,14 @@ onUnmounted(() => {
 .search--mobile {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: center;     /* จัดกลางแนวนอนของลูก */
   gap: 20px;
   padding: 10px 0;
 }
 
 .search--mobile .search__input {
-  width: calc(100% - 2%);
-  /* รวมระยะ 1% ต่อข้าง */
-  margin-inline: 1%;
+  width: min(100%, 560px); /* กว้างสุด 560px แต่ยืดได้ 100% */
+  margin: 0 auto;          /* เผื่อกรณีเป็น block ปกติ */
 }
 
 /* Hamburger + Mobile drawer */
@@ -320,6 +319,7 @@ onUnmounted(() => {
 
 .mobile {
   padding: 0%;
+  margin-inline: auto;
 }
 
 /* Responsive */
