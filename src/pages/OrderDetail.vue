@@ -1,8 +1,20 @@
 <template>
   <div class="bw-container">
-    <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="d-flex align-items-center justify-content-between mb-3 gap-2 flex-wrap">
       <h3 class="m-0">รายละเอียดคำสั่งซื้อ</h3>
-      <router-link class="btn btn-outline-secondary" to="/tracking">ย้อนกลับ</router-link>
+
+      <div class="d-flex gap-2">
+        <router-link class="btn btn-outline-secondary" to="/tracking">ย้อนกลับ</router-link>
+        <!-- ปุ่มลบคำสั่งซื้อ -->
+        <button
+          v-if="order"
+          class="btn btn-outline-danger"
+          @click="openDeleteConfirm"
+          :disabled="removing"
+        >
+          ลบคำสั่งซื้อ
+        </button>
+      </div>
     </div>
 
     <div v-if="loading" class="card p-5 text-center text-muted">กำลังโหลด…</div>
@@ -37,18 +49,24 @@
           <div class="card">
             <div class="card-header bg-light fw-semibold">สินค้า</div>
             <div class="list-group list-group-flush">
-              <div class="list-group-item" v-for="it in order.items || []" :key="it.id">
+              <div class="list-group-item" v-for="it in order.items || []" :key="it.id + '-' + (variantText(it) || '')">
                 <div class="d-flex align-items-center gap-3">
-                  <img :src="it.image || placeholder" :alt="it.name" style="width:72px;height:72px;object-fit:cover"
-                    class="rounded">
+                  <img :src="it.image || placeholder" :alt="it.name" style="width:72px;height:72px;object-fit:cover" class="rounded">
                   <div class="flex-fill">
-                    <div class="fw-semibold">{{ it.name }}</div>
+                    <div class="fw-semibold">
+                      {{ it.name }}
+                      <!-- รุ่น/สเปก (inventory) -->
+                      <span v-if="variantText(it)" class="badge bg-secondary-subtle text-dark ms-1">
+                        {{ variantText(it) }}
+                      </span>
+                    </div>
                     <div class="text-muted small">{{ it.brand || '-' }} · {{ it.category || '-' }}</div>
                     <div class="text-muted small">฿{{ money(it.price) }} × {{ it.qty }}</div>
                   </div>
                   <div class="fw-semibold">฿{{ money(lineTotal(it)) }}</div>
                 </div>
               </div>
+
               <div v-if="!order.items?.length" class="list-group-item text-center text-muted py-4">
                 ไม่มีสินค้าในคำสั่งซื้อนี้
               </div>
@@ -101,19 +119,46 @@
         </div>
       </div>
     </template>
+
+    <!-- Confirm Delete Modal -->
+    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true" ref="confirmEl">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">ยืนยันการลบคำสั่งซื้อ</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" :disabled="removing" aria-label="ปิด"></button>
+          </div>
+          <div class="modal-body">
+            ต้องการลบคำสั่งซื้อ <strong>#{{ order?.id }}</strong> ใช่หรือไม่?<br />
+            <small class="text-muted">การลบนี้ไม่สามารถย้อนกลับได้</small>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-outline-secondary" data-bs-dismiss="modal" :disabled="removing">ยกเลิก</button>
+            <button class="btn btn-danger" @click="doDelete" :disabled="removing">
+              <span v-if="removing" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+              ยืนยันลบ
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- /Confirm Delete Modal -->
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { Modal } from 'bootstrap'
 import { useOrdersStore } from '../stores/orders.js'
 
 const route = useRoute()
+const router = useRouter()
 const orders = useOrdersStore()
 
 const order = ref(null)
 const loading = ref(true)
+const removing = ref(false)
 const placeholder = 'https://placehold.co/600x400?text=Product'
 
 onMounted(async () => {
@@ -129,6 +174,37 @@ onMounted(async () => {
   }
 })
 
+/* ---------- ยืนยันลบ ---------- */
+const confirmEl = ref(null)
+let confirmIns = null
+const openDeleteConfirm = () => {
+  confirmIns = confirmIns || new Modal(confirmEl.value)
+  confirmIns.show()
+}
+const closeDeleteConfirm = () => confirmIns?.hide()
+
+const doDelete = async () => {
+  if (!order.value?.id) return
+  removing.value = true
+  try {
+    // รองรับหลายชื่อเมธอดใน store (ปรับตามโปรเจ็กต์ของคุณ)
+    const id = order.value.id
+    if (typeof orders.delete === 'function') await orders.delete(id)
+    else if (typeof orders.remove === 'function') await orders.remove(id)
+    else if (typeof orders.destroy === 'function') await orders.destroy(id)
+    else throw new Error('orders store ไม่มีเมธอดลบ (delete/remove/destroy)')
+
+    closeDeleteConfirm()
+    router.push('/tracking')
+  } catch (e) {
+    console.error('[order.delete]', e)
+    alert('ลบคำสั่งซื้อไม่สำเร็จ: ' + (e?.message || 'ไม่ทราบสาเหตุ'))
+  } finally {
+    removing.value = false
+  }
+}
+
+/* ---------- utils ---------- */
 const lineTotal = (it) => (+it.price || 0) * (+it.qty || 0)
 const subtotal = computed(() => (order.value?.items || []).reduce((s, it) => s + lineTotal(it), 0))
 const shipping = computed(() => {
@@ -136,6 +212,13 @@ const shipping = computed(() => {
   const sub = subtotal.value
   return Math.max(0, t - sub)
 })
+
+const variantText = (it) => {
+  const v = it?.variant
+  if (!v) return ''
+  if (typeof v === 'string') return v
+  return v.label || v.key || ''
+}
 
 const money = (v) => Number(v || 0).toLocaleString()
 const dt = (v) => {
@@ -160,11 +243,6 @@ const payLabel = (v) => {
 </script>
 
 <style scoped>
-.white-space-pre {
-  white-space: pre-line;
-}
-
-.badge {
-  font-weight: 600;
-}
+.white-space-pre { white-space: pre-line; }
+.badge { font-weight: 600; }
 </style>
