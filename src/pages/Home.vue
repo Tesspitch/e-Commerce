@@ -262,7 +262,7 @@ const productsView = computed(() => {
   const keyword = (qFromUrl.value || '').trim().toLowerCase()
   if (keyword) {
     list = list.filter(p =>
-      ([p.name, p.brand, p.category, p.description].filter(Boolean).join(' ').toLowerCase()).includes(keyword)
+      ([p.name, p.brand, p.category, p.description, p.seo].filter(Boolean).join(' ').toLowerCase()).includes(keyword)
     )
   }
   if (selectedCategory.value) list = list.filter(p => p.category === selectedCategory.value)
