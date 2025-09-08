@@ -107,7 +107,7 @@ const placing = ref(false)
 // เคลียร์ modal/backdrop ค้าง
 function cleanupModals() {
   document.querySelectorAll('.modal.show').forEach(el => {
-    try { (Modal.getInstance(el) || new Modal(el)).hide() } catch {}
+    try { (Modal.getInstance(el) || new Modal(el)).hide() } catch { }
   })
   document.querySelectorAll('.modal-backdrop').forEach(el => el.remove())
   document.body.classList.remove('modal-open')
@@ -124,9 +124,9 @@ const placeOrder = async () => {
     total: total.value,
     status: 'processing',
     createdAt: new Date().toISOString(),
-    
+
   }
-  
+
   try {
     const saved = await orders.create(payload)
     cart.clear()
@@ -146,7 +146,7 @@ const placeOrder = async () => {
       toastEl.value.addEventListener('hidden.bs.toast', go, { once: true })
       toastIns?.show()
       // เผื่อบางธีมปิด autohide → ตั้ง fallback 3 วิ
-      setTimeout(() => { try { go() } catch {} }, 3200)
+      setTimeout(() => { try { go() } catch { } }, 3200)
     } else {
       go()
     }

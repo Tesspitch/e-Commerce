@@ -3,7 +3,8 @@
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
       <h3 class="m-0">คำสั่งซื้อทั้งหมด</h3>
       <div class="d-flex align-items-center gap-2 ms-auto">
-        <input v-model.trim="q" type="search" class="form-control" placeholder="ค้นหา: ชื่อ/เบอร์/รหัสออเดอร์" style="min-width:240px" />
+        <input v-model.trim="q" type="search" class="form-control" placeholder="ค้นหา: ชื่อ/เบอร์/รหัสออเดอร์"
+          style="min-width:240px" />
         <button class="btn btn-outline-primary" :disabled="orders.loading" @click="reload">รีเฟรช</button>
       </div>
     </div>
@@ -79,7 +80,7 @@ const rows = computed(() => {
     })
   }
   // เรียงล่าสุดก่อน
-  list.sort((a,b)=> new Date(b.createdAt) - new Date(a.createdAt))
+  list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
   return list
 })
 
@@ -90,27 +91,33 @@ const firstItemName = (o) => {
   const more = items.length - 1
   return more > 0 ? `${first} และอีก ${more} รายการ` : first
 }
-const itemCount = (o) => (o?.items || []).reduce((s,it)=> s + (+it.qty||0), 0)
+const itemCount = (o) => (o?.items || []).reduce((s, it) => s + (+it.qty || 0), 0)
 
-const money = (v) => Number(v||0).toLocaleString()
+const money = (v) => Number(v || 0).toLocaleString()
 const dt = (v) => {
   const d = v ? new Date(v) : null
   return d ? d.toLocaleString() : '—'
 }
 const badgeOf = (status) => {
   const s = (status || '').toLowerCase()
-  if (['processing','pending'].includes(s)) return 'text-bg-warning'
-  if (['shipped','shipping'].includes(s))  return 'text-bg-info'
-  if (['delivered','success'].includes(s)) return 'text-bg-success'
-  if (['cancelled','canceled','failed'].includes(s)) return 'text-bg-danger'
+  if (['processing', 'pending'].includes(s)) return 'text-bg-warning'
+  if (['shipped', 'shipping'].includes(s)) return 'text-bg-info'
+  if (['delivered', 'success'].includes(s)) return 'text-bg-success'
+  if (['cancelled', 'canceled', 'failed'].includes(s)) return 'text-bg-danger'
   return 'text-bg-secondary'
 }
 const reload = () => orders.fetch()
 </script>
 
 <style scoped>
-.truncate-2{
-  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+.truncate-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
-.badge{ font-weight:600; }
+
+.badge {
+  font-weight: 600;
+}
 </style>

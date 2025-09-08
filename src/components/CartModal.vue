@@ -16,7 +16,8 @@
                 <small class="text-muted">฿{{ Number(it.price).toLocaleString() }}</small>
               </div>
               <div class="d-flex align-items-center gap-2">
-                <input type="number" min="1" class="form-control" style="width:90px" v-model.number="it.qty" @change="changeQty(it)">
+                <input type="number" min="1" class="form-control" style="width:90px" v-model.number="it.qty"
+                  @change="changeQty(it)">
                 <button class="btn btn-outline-danger" @click="remove(it.id)">ลบ</button>
               </div>
             </div>

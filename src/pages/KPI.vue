@@ -32,8 +32,8 @@ const orders = useOrdersStore()
 const fromDate = ref('')
 const toDate = ref('')
 
-onMounted(()=>{ orders.fetch() })
+onMounted(() => { orders.fetch() })
 
-const kpi = computed(()=> orders.kpi )
-const refresh = ()=>{ orders.fetch() }
+const kpi = computed(() => orders.kpi)
+const refresh = () => { orders.fetch() }
 </script>

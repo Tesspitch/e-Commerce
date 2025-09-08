@@ -2,36 +2,35 @@
   <div class="container-fluid px-5">
     <div class="row">
       <!-- Sidebar -->
-      <div class="col-10 col-md-3 col-lg-2 p-0" style="min-width:190px">
+      <div class="col-12 col-lg-2 p-0 order-2 order-lg-1">
         <Sidebar />
       </div>
 
       <!-- Main -->
-      <div class="col-12 col-md-9 col-lg-10">
+      <div class="col-12 col-lg-10 order-1 order-lg-2">
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
           <h3 class="m-0">สินค้า</h3>
+
+          <!-- ปุ่มหมวดหมู่ (สำหรับจอเล็ก) — ย้ายมาไว้ด้านบนสินค้า -->
+          <button class="btn btn-outline-primary d-lg-none" type="button" data-bs-toggle="offcanvas"
+            data-bs-target="#catDrawer" aria-controls="catDrawer">
+            หมวดหมู่
+          </button>
+
           <div class="d-flex gap-2 mt-2">
             <select class="form-select" v-model="sort">
               <option value="">จัดเรียง</option>
               <option value="price-asc">ราคาต่ำ → สูง</option>
               <option value="price-desc">ราคาสูง → ต่ำ</option>
             </select>
-            
           </div>
         </div>
 
         <!-- Products -->
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3">
+        <div class="row row-cols-2 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3">
           <div class="col" v-for="p in productsView" :key="p.id">
-            <div
-              class="card h-100"
-              role="button"
-              tabindex="0"
-              style="cursor:pointer"
-              @click="openQuick(p)"
-              @keydown.enter.prevent="openQuick(p)"
-              @keydown.space.prevent="openQuick(p)"
-            >
+            <div class="card h-100" role="button" tabindex="0" style="cursor:pointer" @click="openQuick(p)"
+              @keydown.enter.prevent="openQuick(p)" @keydown.space.prevent="openQuick(p)">
               <img :src="p.image || placeholder" class="card-img-top" :alt="p.name" loading="lazy" />
               <div class="card-body d-flex flex-column">
                 <h6 class="card-title">{{ p.name }}</h6>
@@ -122,13 +121,15 @@
 
             <div v-else>
               <div v-for="it in items" :key="it.id" class="d-flex align-items-center gap-3 py-2 border-bottom">
-                <img :src="it.image || placeholder" alt="" style="width:72px;height:72px;object-fit:cover" class="rounded" />
+                <img :src="it.image || placeholder" alt="" style="width:72px;height:72px;object-fit:cover"
+                  class="rounded" />
                 <div class="flex-fill">
                   <div class="fw-semibold">{{ it.name }}</div>
                   <small class="text-muted">฿{{ toMoney(it.price) }}</small>
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                  <input type="number" min="1" class="form-control" style="width:90px" v-model.number="it.qty" @change="changeQty(it)" />
+                  <input type="number" min="1" class="form-control" style="width:90px" v-model.number="it.qty"
+                    @change="changeQty(it)" />
                   <button class="btn btn-outline-danger" @click="remove(it.id)">ลบ</button>
                 </div>
               </div>
@@ -175,10 +176,20 @@
                     </div>
 
                     <hr />
-                    <div class="d-flex justify-content-between"><div>Subtotal</div><div>฿{{ toMoney(subtotal) }}</div></div>
-                    <div class="d-flex justify-content-between"><div>Shipping</div><div>฿{{ toMoney(shipping) }}</div></div>
-                    <div class="d-flex justify-content-between fw-bold fs-5 mt-2"><div>Total</div><div>฿{{ toMoney(total) }}</div></div>
-                    <button :disabled="!canSubmit" class="btn btn-bw w-100 mt-3" @click="placeOrder">ยืนยันสั่งซื้อ</button>
+                    <div class="d-flex justify-content-between">
+                      <div>Subtotal</div>
+                      <div>฿{{ toMoney(subtotal) }}</div>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                      <div>Shipping</div>
+                      <div>฿{{ toMoney(shipping) }}</div>
+                    </div>
+                    <div class="d-flex justify-content-between fw-bold fs-5 mt-2">
+                      <div>Total</div>
+                      <div>฿{{ toMoney(total) }}</div>
+                    </div>
+                    <button :disabled="!canSubmit" class="btn btn-bw w-100 mt-3"
+                      @click="placeOrder">ยืนยันสั่งซื้อ</button>
                   </div>
                 </div>
               </div>
@@ -190,12 +201,14 @@
 
     <!-- Toast (อยู่นอกทุก modal) -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:2000; pointer-events:none">
-      <div class="toast text-bg-success border-0 shadow" ref="cartToastEl" role="alert" aria-live="assertive" aria-atomic="true" style="pointer-events:auto">
+      <div class="toast text-bg-success border-0 shadow" ref="cartToastEl" role="alert" aria-live="assertive"
+        aria-atomic="true" style="pointer-events:auto">
         <div class="d-flex align-items-center">
           <div class="toast-body">
             <strong class="me-1">✓</strong> {{ cartToastMsg }}
           </div>
-          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+            aria-label="Close"></button>
         </div>
       </div>
     </div>
@@ -253,8 +266,8 @@ const productsView = computed(() => {
     )
   }
   if (selectedCategory.value) list = list.filter(p => p.category === selectedCategory.value)
-  if (sort.value === 'price-asc')  list.sort((a,b)=>(Number(a.price)||0)-(Number(b.price)||0))
-  if (sort.value === 'price-desc') list.sort((a,b)=>(Number(b.price)||0)-(Number(a.price)||0))
+  if (sort.value === 'price-asc') list.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0))
+  if (sort.value === 'price-desc') list.sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0))
   return list
 })
 
@@ -286,14 +299,14 @@ const openCart = () => {
   checkoutModal = checkoutModal || new Modal(document.getElementById('checkoutModal'))
   checkoutModal.show()
 }
-const addToCart = (p, qty=1) => { cartStore.add(p, qty); showAddedToast(p, qty) }
+const addToCart = (p, qty = 1) => { cartStore.add(p, qty); showAddedToast(p, qty) }
 const changeQty = (it) => cartStore.changeQty(it.id, it.qty)
-const remove    = (id) => cartStore.remove(id)
+const remove = (id) => cartStore.remove(id)
 
 /* ---------- ORDER ---------- */
 function cleanupModals() {
   document.querySelectorAll('.modal.show').forEach(el => {
-    try { (Modal.getInstance(el) || new Modal(el)).hide() } catch {}
+    try { (Modal.getInstance(el) || new Modal(el)).hide() } catch { }
   })
   document.querySelectorAll('.modal-backdrop').forEach(el => el.remove())
   document.body.classList.remove('modal-open')
@@ -330,8 +343,8 @@ const placeOrder = async () => {
 }
 
 /* ---------- TOAST (Add to cart) ---------- */
-const cartToastEl  = ref(null)
-let   cartToast    = null
+const cartToastEl = ref(null)
+let cartToast = null
 const cartToastMsg = ref('')
 
 onMounted(() => {
@@ -349,6 +362,13 @@ const toMoney = (v) => Number(v || 0).toLocaleString()
 </script>
 
 <style scoped>
-.btn-bw{ background:#0ea5e9; color:#fff; }
-.btn-bw:hover{ background:#0369a1; color:#fff; }
+.btn-bw {
+  background: #0ea5e9;
+  color: #fff;
+}
+
+.btn-bw:hover {
+  background: #0369a1;
+  color: #fff;
+}
 </style>

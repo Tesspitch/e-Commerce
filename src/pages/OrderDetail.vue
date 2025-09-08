@@ -39,8 +39,8 @@
             <div class="list-group list-group-flush">
               <div class="list-group-item" v-for="it in order.items || []" :key="it.id">
                 <div class="d-flex align-items-center gap-3">
-                  <img :src="it.image || placeholder" :alt="it.name"
-                       style="width:72px;height:72px;object-fit:cover" class="rounded">
+                  <img :src="it.image || placeholder" :alt="it.name" style="width:72px;height:72px;object-fit:cover"
+                    class="rounded">
                   <div class="flex-fill">
                     <div class="fw-semibold">{{ it.name }}</div>
                     <div class="text-muted small">{{ it.brand || '-' }} · {{ it.category || '-' }}</div>
@@ -137,17 +137,17 @@ const shipping = computed(() => {
   return Math.max(0, t - sub)
 })
 
-const money = (v) => Number(v||0).toLocaleString()
+const money = (v) => Number(v || 0).toLocaleString()
 const dt = (v) => {
   const d = v ? new Date(v) : null
   return d ? d.toLocaleString() : '—'
 }
 const badgeOf = (status) => {
   const s = (status || '').toLowerCase()
-  if (['processing','pending'].includes(s)) return 'text-bg-warning'
-  if (['shipped','shipping'].includes(s))  return 'text-bg-info'
-  if (['delivered','success'].includes(s)) return 'text-bg-success'
-  if (['cancelled','canceled','failed'].includes(s)) return 'text-bg-danger'
+  if (['processing', 'pending'].includes(s)) return 'text-bg-warning'
+  if (['shipped', 'shipping'].includes(s)) return 'text-bg-info'
+  if (['delivered', 'success'].includes(s)) return 'text-bg-success'
+  if (['cancelled', 'canceled', 'failed'].includes(s)) return 'text-bg-danger'
   return 'text-bg-secondary'
 }
 const payLabel = (v) => {
@@ -160,6 +160,11 @@ const payLabel = (v) => {
 </script>
 
 <style scoped>
-.white-space-pre { white-space: pre-line; }
-.badge{ font-weight:600; }
+.white-space-pre {
+  white-space: pre-line;
+}
+
+.badge {
+  font-weight: 600;
+}
 </style>
