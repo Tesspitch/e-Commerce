@@ -7,7 +7,7 @@
 <script setup>
 import AppNavbar from '@/components/AppNavbar.vue'
 import CartModal from '@/components/CartModal.vue'
-import Sidebar from '@/components/Sidebar.vue'
+import SideBar from '@/components/SideBar.vue'
 import { Modal } from 'bootstrap'
 
 let modal
