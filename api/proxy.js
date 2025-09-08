@@ -1,13 +1,30 @@
 export default async function handler(req, res) {
-  const target = 'http://54.169.154.143:3452'
-  const url = target + req.url.replace(/^\/api/, '')
-  const options = { method: req.method, headers: { ...req.headers } }
-  if(['POST','PUT','PATCH'].includes(req.method)){
-    options.body = req
+  const upstream = 'http://54.169.154.143:3452'
+  const url = upstream + req.url.replace(/^\/api/, '')
+
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    res.setHeader('Access-Control-Allow-Headers', '*')
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS')
+    return res.status(200).end()
   }
-  const r = await fetch(url, options)
-  const body = await r.text()
-  res.status(r.status)
-  r.headers.forEach((v,k)=> res.setHeader(k, v))
-  res.send(body)
+
+  const headers = { ...req.headers }; delete headers.host
+  const resp = await fetch(url, {
+    method: req.method,
+    headers,
+    body: ['GET','HEAD'].includes(req.method) ? undefined : req
+  })
+
+  res.status(resp.status)
+  resp.headers.forEach((v, k) => {
+    if (k.toLowerCase() === 'content-encoding') return
+    res.setHeader(k, v)
+  })
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Headers', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS')
+
+  const buf = Buffer.from(await resp.arrayBuffer())
+  res.end(buf)
 }

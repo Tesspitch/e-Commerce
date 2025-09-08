@@ -1,7 +1,6 @@
-// ดึงรูปสินค้าจาก order.items หรือ fallback ไป products store (id/name)
-// ใช้ได้ทั้งหน้า orders และหน้า order detail
+
 import { computed } from "vue";
-import { useProductsStore } from "../stores/products.js";
+import { useProductsStore } from "@/stores/products.js";
 
 export function useProductImage() {
   const products = useProductsStore();

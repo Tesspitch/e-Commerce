@@ -60,7 +60,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useOrdersStore } from '../stores/orders.js'
+import { useOrdersStore } from '@/stores/orders.js'
 
 const orders = useOrdersStore()
 const q = ref('')

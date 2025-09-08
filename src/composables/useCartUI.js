@@ -8,14 +8,7 @@ const get = (id) => {
   return Modal.getOrCreateInstance?.(el) || new Modal(el);
 };
 
-// export function openCartModal() {
-//   const m = get("checkoutModal");
-//   if (!m) {
-//     console.warn("[CartModal] #checkoutModal ไม่พบใน DOM");
-//     return;
-//   }
-//   m.show();
-// }
+
 
 export function openCartModal(){
   const el = document.getElementById('checkoutModal')

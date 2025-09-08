@@ -38,7 +38,7 @@ export function useSearchBox() {
     }, 300);
   });
 
-  // กด Enter/ปุ่มค้นหา -> ทำทันที
+  // ค้นหาแบบ Active
   const submit = (extra = {}) => {
     const q = (query.value || "").trim();
     const dest = { path: "/", query: { ...extra, q: q || undefined } };

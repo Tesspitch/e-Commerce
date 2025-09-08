@@ -96,7 +96,7 @@ const toastVariant = ref('text-bg-success')
 
 onMounted(() => {
   if (toastEl.value) {
-    // autohide เปิดอยู่ (default) ตั้ง delay เองได้
+    
     toastIns = new Toast(toastEl.value, { delay: 2500 })
   }
 })

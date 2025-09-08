@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { getOrders, getOrderById, createOrder, deleteOrder } from '../services/api.js'
+import { getOrders, getOrderById, createOrder, deleteOrder } from '@/services/api.js'
 
 export const useOrdersStore = defineStore('orders', {
   state: () => ({
