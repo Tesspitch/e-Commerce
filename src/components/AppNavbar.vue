@@ -12,8 +12,31 @@ const { brand, logoSrc, cartCount } = toRefs(props)
 
 const { query, submit } = useSearchBox()
 const open = ref(false)
+const isDark = ref(false)
 
 function onSearch() { submit(); open.value = false }
+function applyTheme(dark) {
+  const root = document.documentElement
+  root.setAttribute('data-bs-theme', dark ? 'dark' : 'light')
+  localStorage.setItem('theme', dark ? 'dark' : 'light')
+}
+
+function onToggleDark() {
+  applyTheme(isDark.value)
+}
+
+function toggleDark() {
+  isDark.value = !isDark.value
+  applyTheme(isDark.value)
+  // ถ้าอยากให้เมนูปิดด้วยหลังสลับธีม ให้ปลดคอมเมนต์บรรทัดล่าง
+  // closeProfile()
+}
+
+onMounted(() => {
+  const saved = localStorage.getItem('theme')
+  isDark.value = saved ? saved === 'dark' : window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false
+  applyTheme(isDark.value)
+})
 
 // ▼ โปรไฟล์: ค้างอยู่จนกว่าคลิกนอก/กด Esc
 const profileOpen = ref(false)
@@ -80,8 +103,29 @@ onUnmounted(() => {
           <div id="profileMenu" class="profile__menu" v-show="profileOpen" role="menu">
             <router-link class="profile__item" to="/kpi" role="menuitem" @click="closeProfile()">KPI</router-link>
             <!-- TODO: แก้ path ให้ตรง route จริงของคุณ ถ้าไม่ใช่ /tracking -->
-            <router-link class="profile__item" to="/order" role="menuitem"
-              @click="closeProfile()">คำสั่งซื้อ</router-link>
+            <router-link class="profile__item" to="/order" role="menuitem" @click="closeProfile()">คำสั่งซื้อ</router-link>
+            <!-- สวิตช์ Dark Mode -->
+            <!-- แทนที่บล็อก Dark Mode เดิม -->
+              <div
+                class="profile__item d-flex justify-content-between align-items-center"
+                role="menuitemcheckbox"
+                :aria-checked="isDark"
+                tabindex="0"
+                @click="toggleDark"
+                @keydown.enter.prevent="toggleDark"
+                @keydown.space.prevent="toggleDark"
+              >
+                <span>Dark Mode</span>
+                <div class="form-check form-switch m-0" @click.stop>
+                  <input
+                    id="darkSwitch"
+                    class="form-check-input"
+                    type="checkbox"
+                    v-model="isDark"
+                    @change.stop="onToggleDark"
+                  />
+                </div>
+              </div>
           </div>
         </div>
 
@@ -292,5 +336,57 @@ onUnmounted(() => {
   .mobile {
     display: block;
   }
+}
+.profile { position: relative; }
+
+/* ===== Dropdown (เฉพาะกล่องเมนู) – Light ===== */
+.profile__menu{
+  position: absolute;
+  right: 0; top: calc(100% + 8px);
+  min-width: 220px;
+  background: #ffffff;
+  border: 1px solid rgba(2,132,199,.15);
+  box-shadow: 0 10px 30px rgba(2,132,199,.10);
+  border-radius: 12px;
+  padding: 6px;
+  z-index: 1000;
+}
+.profile__item{
+  display: flex; align-items: center; justify-content: space-between;
+  gap: .75rem;
+  color: #0f172a;           /* ข้อความ */
+  text-decoration: none;
+  background: transparent;
+  border-radius: .6rem;
+  padding: .625rem .75rem;
+  transition: background-color .2s, color .2s, border-color .2s, box-shadow .2s;
+}
+.profile__item:hover{ background: #f1f5f9; } /* hover เฉพาะในเมนู */
+
+/* ===== เฉพาะตอน Dark Mode (สลับด้วย <html data-bs-theme="dark">) ===== */
+html[data-bs-theme="dark"] .profile__menu{
+  background: #0f172a;                     /* กล่องเข้ม */
+  border-color: rgba(56,189,248,.18);
+  box-shadow: 0 10px 30px rgba(14,165,233,.12);
+}
+html[data-bs-theme="dark"] .profile__item{
+  color: #e2e8f0;
+}
+html[data-bs-theme="dark"] .profile__item:hover{
+  background: #111827;                     /* hover เข้มขึ้นเล็กน้อย */
+}
+
+/* (ทางเลือก) ลูกศรเล็กๆ ใต้ปุ่ม */
+.profile__menu::before{
+  content: "";
+  position: absolute;
+  top: -8px; right: 14px;
+  border: 8px solid transparent;
+  border-bottom-color: currentColor;
+  filter: drop-shadow(0 -2px 2px rgba(0,0,0,.06));
+  color: rgba(2,132,199,.15);              /* ให้ขอบเข้ากับ border กล่อง */
+}
+html[data-bs-theme="dark"] .profile__menu::before{
+  color: rgba(56,189,248,.18);
 }
 </style>
