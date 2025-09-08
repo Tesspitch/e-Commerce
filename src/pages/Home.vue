@@ -65,10 +65,7 @@
                   </div>
 
                   <div class="d-flex gap-2 mt-3">
-                    <button class="btn btn-bw" @click="addToCart(quick, quickQty)">เพิ่มเข้าตะกร้า</button>
-                    <router-link class="btn btn-outline-primary" :to="`/product/${quick.id}`" data-bs-dismiss="modal">
-                      ไปหน้ารายละเอียดเต็ม
-                    </router-link>
+                    <button class="btn btn-bw" @click="addToCart(quick, quickQty)">เพิ่มเข้าตะกร้า</button>                    
                   </div>
                 </div>
               </div>
@@ -76,20 +73,22 @@
               <hr class="my-4" />
               <h6>สินค้าในหมวดเดียวกัน</h6>
               <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-3">
-                <div class="col" v-for="r in related" :key="r.id">
-                  <div class="card h-100">
-                    <img :src="r.image || placeholder" class="card-img-top" :alt="r.name" />
-                    <div class="card-body d-flex flex-column">
-                      <small class="text-muted mb-1">{{ r.brand || '-' }}</small>
-                      <div class="fw-semibold">{{ r.name }}</div>
-                      <div class="mt-auto d-flex justify-content-between align-items-center">
-                        <span>฿{{ toMoney(r.price) }}</span>
-                        <button class="btn btn-sm btn-outline-primary" @click="addToCart(r)">เพิ่ม</button>
-                      </div>
+              <div class="col" v-for="r in related" :key="r.id">
+                <div class="card h-100" role="button" style="cursor:pointer"
+                    @click="openQuick(r)">
+                  <img :src="r.image || placeholder" class="card-img-top" :alt="r.name" />
+                  <div class="card-body d-flex flex-column">
+                    <small class="text-muted mb-1">{{ r.brand || '-' }}</small>
+                    <div class="fw-semibold">{{ r.name }}</div>
+                    <div class="mt-auto d-flex justify-content-between align-items-center">
+                      <span>฿{{ toMoney(r.price) }}</span>
+                      <button class="btn btn-sm btn-outline-primary"
+                              @click.stop="addToCart(r)">เพิ่ม</button>
                     </div>
                   </div>
                 </div>
               </div>
+            </div>
             </template>
           </div>
           <div class="modal-footer">
@@ -181,7 +180,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch,nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Modal } from 'bootstrap'
 import Sidebar from '@/components/Sidebar.vue'
@@ -260,10 +259,20 @@ const productsView = computed(() => {
 })
 
 let quickModal
-const openQuick = (p) => {
-  quick.value = p; quickQty.value = 1
+const openQuick = async (p) => {
+  // รองรับทั้งส่ง object มา หรือส่งแค่ id
+  const list = productsStore.list ?? []
+  quick.value = typeof p === 'object' ? p : list.find(x => String(x.id) === String(p))
+  if (!quick.value) return
+
+  quickQty.value = 1
   quickModal = quickModal || new Modal(document.getElementById('quickModal'))
   quickModal.show()
+
+  // รอ DOM อัปเดตแล้วเลื่อน modal ขึ้นบนให้เห็นรายละเอียดชุดใหม่
+  await nextTick()
+  document.querySelector('#quickModal .modal-body')
+    ?.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 const addToCart = (p, qty=1) => cartStore.add(p, qty)
