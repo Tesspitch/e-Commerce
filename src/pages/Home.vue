@@ -11,6 +11,13 @@
       <div class="col-12 col-md-9 col-lg-10">
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
           <h3 class="m-0">สินค้า</h3>
+          <div class="d-flex gap-2 mt-2">                      
+            <select class="form-select" v-model="sort">
+              <option value="">จัดเรียง</option>
+              <option value="price-asc">ราคาต่ำ → สูง</option>
+              <option value="price-desc">ราคาสูง → ต่ำ</option>
+            </select>
+          </div>
         </div>
 
         <!-- Products grid -->
