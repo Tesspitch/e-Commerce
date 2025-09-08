@@ -275,7 +275,7 @@
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Modal, Toast } from 'bootstrap'
-import Sidebar from '@/components/Sidebar.vue'
+import Sidebar from '@/components/SideBar.vue'
 import VariantPicker from '@/components/VariantPicker.vue'
 import { useKeywordFromRoute } from '@/composables/useSearch.js'
 
