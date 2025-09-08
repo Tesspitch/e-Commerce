@@ -150,17 +150,14 @@
             <div v-else>
               <div v-for="it in items" :key="it.id" class="d-flex align-items-center gap-3 py-2 border-bottom">
                 <img :src="it.image || placeholder" alt="" style="width:72px;height:72px;object-fit:cover"
-                     class="rounded" />
+                  class="rounded" />
                 <div class="flex-fill">
-                  <div class="fw-semibold">
-                    {{ it.name }}
-                    <small v-if="it.variant?.label" class="text-muted">— {{ it.variant.label }}</small>
-                  </div>
+                  <div class="fw-semibold">{{ it.name }}</div>
                   <small class="text-muted">฿{{ toMoney(it.price) }}</small>
                 </div>
                 <div class="d-flex align-items-center gap-2">
                   <input type="number" min="1" class="form-control" style="width:90px" v-model.number="it.qty"
-                         @change="changeQty(it)" />
+                    @change="changeQty(it)" />
                   <button class="btn btn-outline-danger" @click="remove(it.id)">ลบ</button>
                 </div>
               </div>
@@ -207,10 +204,20 @@
                     </div>
 
                     <hr />
-                    <div class="d-flex justify-content-between"><div>Subtotal</div><div>฿{{ toMoney(subtotal) }}</div></div>
-                    <div class="d-flex justify-content-between"><div>Shipping</div><div>฿{{ toMoney(shipping) }}</div></div>
-                    <div class="d-flex justify-content-between fw-bold fs-5 mt-2"><div>Total</div><div>฿{{ toMoney(total) }}</div></div>
-                    <button :disabled="!canSubmit" class="btn btn-bw w-100 mt-3" @click="placeOrder">ยืนยันสั่งซื้อ</button>
+                    <div class="d-flex justify-content-between">
+                      <div>Subtotal</div>
+                      <div>฿{{ toMoney(subtotal) }}</div>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                      <div>Shipping</div>
+                      <div>฿{{ toMoney(shipping) }}</div>
+                    </div>
+                    <div class="d-flex justify-content-between fw-bold fs-5 mt-2">
+                      <div>Total</div>
+                      <div>฿{{ toMoney(total) }}</div>
+                    </div>
+                    <button :disabled="!canSubmit" class="btn btn-bw w-100 mt-3"
+                      @click="placeOrder">ยืนยันสั่งซื้อ</button>
                   </div>
                 </div>
               </div>

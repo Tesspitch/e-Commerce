@@ -1,27 +1,30 @@
 <template>
   <div>
-    <!-- ปุ่ม toggler เดิมถูกซ่อน เพราะย้ายไปไว้ที่ Home.vue แล้ว -->
     <!-- Desktop sidebar -->
-    <aside class="p-3 border-end bg-light min-vh-100 d-none d-lg-block sidebar-min">
+    <aside class="bw-sidebar p-3 border-end min-vh-100 d-none d-lg-block sidebar-min">
       <h5 class="mb-3">หมวดหมู่</h5>
       <ul class="list-group">
-        <li v-for="cat in categories" :key="cat" class="list-group-item list-group-item-action"
-          :class="{ active: currentCategory === cat }" role="button" @click="go(cat)">
+        <li v-for="cat in categories" :key="cat"
+            class="list-group-item list-group-item-action"
+            :class="{ active: currentCategory === cat }"
+            role="button" @click="go(cat)">
           {{ cat }}
         </li>
       </ul>
     </aside>
-
-    <!-- Mobile Offcanvas (ยังใช้ตัวเดิม id=catDrawer) -->
-    <div class="offcanvas offcanvas-start" id="catDrawer" tabindex="-1" aria-labelledby="catDrawerLabel" ref="drawerEl">
-      <div class="offcanvas-header">
+    <!-- Mobile Offcanvas -->
+    <div class="offcanvas offcanvas-start bw-sidebar" id="catDrawer" tabindex="-1"
+         aria-labelledby="catDrawerLabel" ref="drawerEl">
+      <div class="offcanvas-header bg-body-tertiary">
         <h5 id="catDrawerLabel" class="mb-0">หมวดหมู่</h5>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="ปิด"></button>
       </div>
       <div class="offcanvas-body p-0">
         <ul class="list-group list-group-flush">
-          <li v-for="cat in categories" :key="cat" class="list-group-item list-group-item-action"
-            :class="{ active: currentCategory === cat }" role="button" @click="goFromDrawer(cat)">
+          <li v-for="cat in categories" :key="cat"
+              class="list-group-item list-group-item-action"
+              :class="{ active: currentCategory === cat }"
+              role="button" @click="goFromDrawer(cat)">
             {{ cat }}
           </li>
         </ul>

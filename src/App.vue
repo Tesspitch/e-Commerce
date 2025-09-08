@@ -17,3 +17,4 @@ const openCart = () => {
   modal.show()
 }
 </script>
+
