@@ -1,50 +1,41 @@
 <template>
-  <div class="bw-container">
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-      <h3 class="m-0">สินค้า</h3>
-
-      <div class="d-flex gap-2">
-        <input v-model.trim="q" type="search" class="form-control"
-               placeholder="ค้นหา: ชื่อ/แบรนด์/หมวดหมู่" aria-label="ค้นหาสินค้า" style="min-width:240px" />
-        <select class="form-select" v-model="cat">
-          <option value="">ทุกหมวดหมู่</option>
-          <option v-for="c in categories" :key="c" :value="c">{{ c }}</option>
-        </select>
-        <select class="form-select" v-model="sort">
-          <option value="">จัดเรียง</option>
-          <option value="price-asc">ราคาต่ำ → สูง</option>
-          <option value="price-desc">ราคาสูง → ต่ำ</option>
-        </select>
+  <!-- SideBar -->
+  <div class="container-fluid px-5">
+    <div class="row">
+      <!-- Sidebar -->
+      <div class="col-10 col-md-3 col-lg-2 p-0" style="min-width:190px">
+        <Sidebar />
       </div>
 
-      <div class="ms-auto">
-        <button class="btn btn-outline-primary position-relative" @click="openCart()">
-          ตะกร้า <span class="badge text-bg-primary ms-1">{{ cartCount }}</span>
-        </button>
-      </div>
-    </div>
+      <!-- Main Content -->
+      <div class="col-12 col-md-9 col-lg-10">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+          <h3 class="m-0">สินค้า</h3>
+        </div>
 
-    <!-- Products grid -->
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3">
-      <div class="col" v-for="p in productsView" :key="p.id">
-        <div class="card h-100">
-          <img :src="p.image || placeholder" class="card-img-top" :alt="p.name" loading="lazy" />
-          <div class="card-body d-flex flex-column">
-            <h6 class="card-title">{{ p.name }}</h6>
-            <p class="text-muted mb-2">
-              {{ p.brand || '-' }} · <span class="badge bg-light text-dark">{{ p.category || '-' }}</span>
-            </p>
-            <div class="mt-auto d-flex justify-content-between align-items-center">
-              <strong>฿{{ toMoney(p.price) }}</strong>
-              <div class="btn-group">
-                <button class="btn btn-outline-primary btn-sm" @click="openQuick(p)">ดูรายละเอียด</button>
-                <button class="btn btn-bw btn-sm" @click="addToCart(p)">เพิ่ม</button>
+        <!-- Products grid -->
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3">
+          <div class="col" v-for="p in productsView" :key="p.id">
+            <div class="card h-100">
+              <img :src="p.image || placeholder" class="card-img-top" :alt="p.name" loading="lazy" />
+              <div class="card-body d-flex flex-column">
+                <h6 class="card-title">{{ p.name }}</h6>
+                <p class="text-muted mb-2">
+                  {{ p.brand || '-' }} · <span class="badge bg-light text-dark">{{ p.category || '-' }}</span>
+                </p>
+                <div class="mt-auto d-flex justify-content-between align-items-center">
+                  <strong>฿{{ toMoney(p.price) }}</strong>
+                  <div class="btn-group">
+                    <button class="btn btn-outline-primary btn-sm" @click="openQuick(p)">ดูรายละเอียด</button>
+                    <button class="btn btn-bw btn-sm" @click="addToCart(p)">เพิ่ม</button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </div> <!-- end main -->
+    </div> <!-- end row -->
 
     <!-- Quick View Modal -->
     <div class="modal fade" id="quickModal" tabindex="-1" aria-hidden="true">
@@ -190,9 +181,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { Modal } from 'bootstrap'
+import Sidebar from '@/components/Sidebar.vue'
 
 import { useProductsStore } from '../stores/products.js'
 import { useCartStore } from '../stores/cart.js'
@@ -201,10 +193,15 @@ import { useOrdersStore } from '../stores/orders.js'
 const productsStore = useProductsStore()
 const cartStore = useCartStore()
 const ordersStore = useOrdersStore()
+
+const route = useRoute()
 const router = useRouter()
 
-const q = ref(''); const cat = ref(''); const sort = ref('')
-const quick = ref(null); const quickQty = ref(1)
+const q = ref('')
+const cat = ref('')
+const sort = ref('')
+const quick = ref(null)
+const quickQty = ref(1)
 const placeholder = 'https://placehold.co/600x400?text=Product'
 
 const items = computed(() => cartStore.items)
@@ -223,11 +220,40 @@ const categories = computed(() => productsStore.list?.length
   : []
 )
 
+// ✅ อ่านค่าหมวดหมู่จาก URL
+const selectedCategory = computed(() => route.query.category ?? '')
+
+// ✅ sync URL -> dropdown
+watch(
+  () => route.query.category,
+  (val) => { cat.value = val || '' },
+  { immediate: true }
+)
+
+// ✅ sync dropdown -> URL
+watch(cat, (val) => {
+  const next = { ...route.query }
+  if (!val) delete next.category
+  else next.category = val
+  router.replace({ name: 'home', query: next })
+})
+
 const productsView = computed(() => {
   let list = (productsStore.list ?? []).slice()
   const keyword = q.value.trim().toLowerCase()
-  if (keyword) list = list.filter(p => ([p.name,p.brand,p.category,p.description].filter(Boolean).join(' ').toLowerCase()).includes(keyword))
-  if (cat.value) list = list.filter(p => p.category === cat.value)
+  if (keyword) {
+    list = list.filter(p =>
+      ([p.name, p.brand, p.category, p.description]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+        .includes(keyword))
+    )
+  }
+  // ✅ filter ตาม selectedCategory
+  if (selectedCategory.value) {
+    list = list.filter(p => p.category === selectedCategory.value)
+  }
   if (sort.value === 'price-asc')  list.sort((a,b)=>(Number(a.price)||0)-(Number(b.price)||0))
   if (sort.value === 'price-desc') list.sort((a,b)=>(Number(b.price)||0)-(Number(a.price)||0))
   return list

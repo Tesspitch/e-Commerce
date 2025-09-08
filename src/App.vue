@@ -7,12 +7,13 @@
 <script setup>
 import AppNavbar from '@/components/AppNavbar.vue'
 import CartModal from '@/components/CartModal.vue'
+import Sidebar from '@/components/Sidebar.vue'
 import { Modal } from 'bootstrap'
 
 let modal
-const openCart = ()=>{
+const openCart = () => {
   const el = document.getElementById('cartModal')
-  if(!modal) modal = new Modal(el)
+  if (!modal) modal = new Modal(el)
   modal.show()
 }
 </script>
