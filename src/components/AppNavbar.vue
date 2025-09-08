@@ -28,7 +28,7 @@ function onToggleDark() {
 function toggleDark() {
   isDark.value = !isDark.value
   applyTheme(isDark.value)
-  // ถ้าอยากให้เมนูปิดด้วยหลังสลับธีม ให้ปลดคอมเมนต์บรรทัดล่าง
+  
   // closeProfile()
 }
 
@@ -38,7 +38,7 @@ onMounted(() => {
   applyTheme(isDark.value)
 })
 
-// ▼ โปรไฟล์: ค้างอยู่จนกว่าคลิกนอก/กด Esc
+// ▼ โปรไฟล์: 
 const profileOpen = ref(false)
 const profileEl = ref(null)
 const toggleProfile = () => (profileOpen.value = !profileOpen.value)
@@ -168,7 +168,7 @@ onUnmounted(() => {
   color: var(--nav-fg);
 }
 
-/* ชิดซ้าย–ขวาสุดของ navbar */
+/* ชิดซ้าย–ขวาสุด navbar */
 .nav__inner {
   width: 100%;
   display: grid;
@@ -292,18 +292,18 @@ onUnmounted(() => {
   background: rgba(14, 165, 233, .12);
 }
 
-/* Mobile search: จัดกลาง ระยะขอบซ้าย-ขวา 1% */
+/* Mobile search: */
 .search--mobile {
   display: flex;
   flex-direction: column;
-  align-items: center;     /* จัดกลางแนวนอนของลูก */
+  align-items: center;     
   gap: 20px;
   padding: 10px 0;
 }
 
 .search--mobile .search__input {
-  width: min(100%, 560px); /* กว้างสุด 560px แต่ยืดได้ 100% */
-  margin: 0 auto;          /* เผื่อกรณีเป็น block ปกติ */
+  width: min(100%, 560px); 
+  margin: 0 auto;          
 }
 
 /* Hamburger + Mobile drawer */
@@ -363,9 +363,9 @@ onUnmounted(() => {
 }
 .profile__item:hover{ background: #f1f5f9; } /* hover เฉพาะในเมนู */
 
-/* ===== เฉพาะตอน Dark Mode (สลับด้วย <html data-bs-theme="dark">) ===== */
+/* ===== เฉพาะตอน Dark Mode  ===== */
 html[data-bs-theme="dark"] .profile__menu{
-  background: #0f172a;                     /* กล่องเข้ม */
+  background: #0f172a;                     
   border-color: rgba(56,189,248,.18);
   box-shadow: 0 10px 30px rgba(14,165,233,.12);
 }
@@ -373,7 +373,7 @@ html[data-bs-theme="dark"] .profile__item{
   color: #e2e8f0;
 }
 html[data-bs-theme="dark"] .profile__item:hover{
-  background: #111827;                     /* hover เข้มขึ้นเล็กน้อย */
+  background: #111827;                     
 }
 
 /* (ทางเลือก) ลูกศรเล็กๆ ใต้ปุ่ม */
