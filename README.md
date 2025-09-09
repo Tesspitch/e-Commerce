@@ -79,16 +79,6 @@ npm run preview
 ```
 > ต้องมี Node.js เวอร์ชัน 18+ (แนะนำ LTS)
 
-## การตั้งค่า Environment
-สร้างไฟล์ `.env.development` และ/หรือ `.env.production` ตามสภาพแวดล้อม:
-```ini
-# ใช้ proxy/backend เดียวกับที่ตั้งค่าไว้
-VITE_API_URL=/api            # Development (แนะนำให้ตั้ง rewrite ใน dev server หรือ Vercel)
-# หรือระบุปลายทางโดยตรง
-# VITE_API_URL=http://54.169.154.143:3452
-```
-> ใน `vercel.json` มีการตั้ง **rewrites** ให้เส้นทาง `/api/*` ชี้ไปยัง `http://54.169.154.143:3452/*` และเส้นทางอื่น ๆ ให้เสิร์ฟ `index.html` (SPA).
-
 ## เส้นทาง (Routes)
 - `/` → **home** (คอมโพเนนต์: `@/pages/Home.vue`)
 - `/product/:id` → **product** (คอมโพเนนต์: `@/pages/ProductDetail.vue`)
