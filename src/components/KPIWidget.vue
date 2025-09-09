@@ -11,11 +11,35 @@
 </template>
 
 <script setup>
-const props = defineProps({ data: { type: Object, required: true } })
-const cards = [
-  { title: 'Total Revenue', value: new Intl.NumberFormat().format(props.data.totalRevenue), subtitle: 'รวมยอดขายทั้งหมด (฿)' },
-  { title: 'Total Orders', value: props.data.totalOrders, subtitle: 'จำนวนคำสั่งซื้อ' },
-  { title: 'Avg Order Value', value: new Intl.NumberFormat().format(props.data.avgOrderValue.toFixed ? Number(props.data.avgOrderValue.toFixed(0)) : props.data.avgOrderValue), subtitle: 'มูลค่าเฉลี่ย/ออเดอร์ (฿)' },
+import { computed } from 'vue'
 
-]
+const props = defineProps({
+  data: {
+    type: Object,
+    required: true,
+    // ค่าปลอดภัยกรณียังโหลดไม่เสร็จ
+    default: () => ({ totalRevenue: 0, totalOrders: 0, avgOrderValue: 0 })
+  }
+})
+
+const fmt = (n) => new Intl.NumberFormat().format(Number(n || 0))
+
+// ทำเป็น computed เพื่อให้ reactive เมื่อ props.data เปลี่ยน
+const cards = computed(() => ([
+  {
+    title: 'Total Revenue',
+    value: fmt(props.data.totalRevenue),
+    subtitle: 'รวมยอดขายทั้งหมด (฿)'
+  },
+  {
+    title: 'Total Orders',
+    value: fmt(props.data.totalOrders),
+    subtitle: 'จำนวนคำสั่งซื้อ'
+  },
+  {
+    title: 'Avg Order Value',
+    value: fmt(props.data.avgOrderValue?.toFixed ? Number(props.data.avgOrderValue.toFixed(0)) : props.data.avgOrderValue),
+    subtitle: 'มูลค่าเฉลี่ย/ออเดอร์ (฿)'
+  }
+]))
 </script>
