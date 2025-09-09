@@ -1,4 +1,4 @@
-# BlueWhite Shop — ระบบ e‑Commerce (Vue 3 + Pinia + Vue Router + Bootstrap 5)
+# ImHereShop — ระบบ e‑Commerce (Vue 3 + Pinia + Vue Router + Bootstrap 5)
 
 ## ภาพรวมโครงการ
 เว็บแอปร้านค้าออนไลน์ที่พัฒนาด้วย **Vue 3 + Vite** ใช้ **Pinia** จัดการสถานะ, **Vue Router** สำหรับเส้นทาง, และ **Bootstrap 5** เพื่อ UI ที่ตอบสนองได้ดีบนอุปกรณ์พกพา โครงการเชื่อมต่อ **REST API** ผ่าน `axios` โดยกำหนดฐาน URL จากไฟล์ `.env` หรือผ่าน `vercel.json` (rewrite → `/api`).
