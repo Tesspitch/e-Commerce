@@ -4,7 +4,7 @@ import { useSearchBox } from '@/composables/useSearch.js'
 import { openCartModal } from '@/composables/useCartUI.js'
 
 const props = defineProps({
-  brand: { type: String, default: 'SkyShop' },
+  brand: { type: String, default: 'ImHereShop' },
   logoSrc: { type: String, default: '/logo.png' },
   cartCount: { type: Number, default: 0 },
 })
